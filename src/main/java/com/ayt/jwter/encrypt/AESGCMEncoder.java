@@ -1,6 +1,5 @@
 package com.ayt.jwter.encrypt;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -36,11 +35,11 @@ public class AESGCMEncoder implements Encrypter {
 	        GCMParameterSpec paramSpec = new GCMParameterSpec(128, ivs);
 	        
 	        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, paramSpec);
-
-	        String encrypted = iv+Base64.getEncoder().encodeToString(cipher.doFinal(val.getBytes("UTF-8")));
+	        String ecrypted = Base64.getEncoder().encodeToString(cipher.doFinal(val.getBytes(StandardCharsets.UTF_8)));
+	        String encrypted = iv+ecrypted;
 	        return encrypted;
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException | 
-				UnsupportedEncodingException |InvalidKeyException | 
+				 InvalidKeyException | 
 				InvalidAlgorithmParameterException | 
 				IllegalBlockSizeException | BadPaddingException e ) {
 			e.printStackTrace();
@@ -61,7 +60,7 @@ public class AESGCMEncoder implements Encrypter {
 	        GCMParameterSpec paramSpec = new GCMParameterSpec(128, ivs);
 	        
 	        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, paramSpec);
-			String decrypted =  new String(cipher.doFinal(Base64.getDecoder().decode(enc)), "UTF-8");
+			String decrypted =  new String(cipher.doFinal(enc), "UTF-8");
 			return decrypted;			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -71,12 +70,13 @@ public class AESGCMEncoder implements Encrypter {
 	}
 	
 	private byte[] getIv(String encrypted) {
-		String iv = encrypted.substring(0, 31);
+		String iv = encrypted.substring(0, 24);
 		return Base64.getDecoder().decode(iv);
 	}
 	
 	private byte[] getEncrypted(String encrypted) {
-		return Base64.getDecoder().decode(encrypted);
+		String encryptedValue = encrypted.substring(24, encrypted.length());
+		return Base64.getDecoder().decode(encryptedValue);
 	}
 	
 	public static void main(String[] args) {

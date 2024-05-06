@@ -1,7 +1,6 @@
 package com.ayt.jwter.encrypt;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -33,7 +32,8 @@ public class AESCBCEncoder implements Encrypter {
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         IvParameterSpec paramSpec = new IvParameterSpec(ivs);
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, paramSpec);
-        String encrypted = iv+Base64.getEncoder().encodeToString(cipher.doFinal(val.getBytes("UTF-8")));
+        String encrypted = Base64.getEncoder().encodeToString(cipher.doFinal(val.getBytes("UTF-8")));
+        encrypted = iv+encrypted;
         
         return encrypted;
 	}
@@ -45,6 +45,37 @@ public class AESCBCEncoder implements Encrypter {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public String decrypt(String encrypted) {
+		
+		try {
+			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			byte[] key = secretKey.getBytes("UTF-8");
+	        byte[] ivs = getIv(encrypted);
+	        byte[] enc = getEncrypted(encrypted);
+	        
+	        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+	        IvParameterSpec paramSpec = new IvParameterSpec(ivs);
+	        
+	        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, paramSpec);
+			String decrypted =  new String(cipher.doFinal(enc), "UTF-8");
+			return decrypted;			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
+	
+	private byte[] getIv(String encrypted) {
+		String iv = encrypted.substring(0, 24);
+		return Base64.getDecoder().decode(iv);
+	}
+	
+	private byte[] getEncrypted(String encrypted) {
+		String encryptedValue = encrypted.substring(24, encrypted.length());
+		return Base64.getDecoder().decode(encryptedValue);
 	}
 
 }
